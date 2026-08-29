@@ -1,0 +1,154 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Material {
+  id          Int      @id @default(autoincrement())
+  name        String
+  code        String   @unique
+  typeSize    String?
+  netPrice    Float    @default(0)
+  vatRate     Float    @default(23)
+  grossPrice  Float    @default(0)
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  attributes         MaterialAttribute[]
+  groups             MaterialGroup[]
+  productMaterials   ProductMaterial[]
+  orderItems         OrderItem[]
+  orderMaterialUsage OrderMaterialUsage[]
+}
+
+model MaterialAttribute {
+  id             Int    @id @default(autoincrement())
+  materialId     Int
+  attributeName  String
+  attributeValue String
+
+  material Material @relation(fields: [materialId], references: [id], onDelete: Cascade)
+
+  @@index([materialId])
+}
+
+model Group {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+
+  materials MaterialGroup[]
+}
+
+model MaterialGroup {
+  materialId Int
+  groupId    Int
+
+  material Material @relation(fields: [materialId], references: [id], onDelete: Cascade)
+  group    Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@id([materialId, groupId])
+}
+
+model Product {
+  id          Int      @id @default(autoincrement())
+  name        String
+  code        String   @unique
+  description String?
+  netPrice    Float    @default(0)
+  vatRate     Float    @default(23)
+  grossPrice  Float    @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  materials          ProductMaterial[]
+  orderItems         OrderItem[]
+  orderMaterialUsage OrderMaterialUsage[]
+}
+
+model ProductMaterial {
+  id         Int   @id @default(autoincrement())
+  productId  Int
+  materialId Int
+  quantity   Float
+
+  product  Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  material Material @relation(fields: [materialId], references: [id])
+
+  @@index([productId])
+  @@index([materialId])
+}
+
+model Customer {
+  id        Int      @id @default(autoincrement())
+  name      String
+  taxId     String?
+  email     String?
+  phone     String?
+  note      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  orders Order[]
+}
+
+model Order {
+  id                   Int      @id @default(autoincrement())
+  orderDate            DateTime
+  customerId           Int?
+  customerNameSnapshot String
+  documentNumber       String?
+  invoiceNumber        String?
+  paymentMethod        String
+  note                 String?
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+
+  customer      Customer?            @relation(fields: [customerId], references: [id])
+  items         OrderItem[]
+  materialUsage OrderMaterialUsage[]
+}
+
+model OrderItem {
+  id         Int      @id @default(autoincrement())
+  orderId    Int
+  productId  Int?
+  materialId Int?
+  quantity   Float
+  unitPrice  Float?
+  createdAt  DateTime @default(now())
+
+  order         Order                @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product       Product?             @relation(fields: [productId], references: [id])
+  material      Material?            @relation(fields: [materialId], references: [id])
+  materialUsage OrderMaterialUsage[]
+
+  @@index([orderId])
+}
+
+model OrderMaterialUsage {
+  id           Int      @id @default(autoincrement())
+  orderId      Int
+  orderItemId  Int
+  productId    Int?
+  materialId   Int
+  quantityUsed Float
+  createdAt    DateTime @default(now())
+
+  order     Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderItem OrderItem @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  product   Product?  @relation(fields: [productId], references: [id])
+  material  Material  @relation(fields: [materialId], references: [id])
+
+  @@index([orderId])
+  @@index([materialId])
+  @@index([createdAt])
+}
