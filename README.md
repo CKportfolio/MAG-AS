@@ -133,3 +133,22 @@ Te funkcje są **roadmapą**, a nie częścią obecnej wersji.
 **v0.1 — first user-feedback build**
 
 Pierwsza desktopowa wersja jest gotowa i przekazana do testów użytkownika przed kolejną iteracją rozwoju.
+
+## Automatyczna kontrola jakości
+
+Repozytorium zawiera workflow GitHub Actions uruchamiany dla zmian na branchach roboczych oraz pull requestów do `main`.
+
+CI sprawdza obecnie:
+
+- składnię plików JavaScript,
+- testy logiki BOM i snapshotów zużycia materiałów,
+- sprzedaż materiałów bezpośrednich,
+- walidację błędnych pozycji zamówienia,
+- agregację dashboardu i kalkulację wartości materiałów,
+- filtrowanie danych według grup i zakresu dat,
+- parser importu CSV,
+- poprawność schematu Prisma,
+- możliwość wdrożenia migracji na świeżej bazie SQLite,
+- zależności npm pod kątem podatności o poziomie high/critical.
+
+Testy korzystają z wbudowanego `node:test`; do testów logiki biznesowej nie są wymagane zewnętrzne usługi ani dane produkcyjne.
