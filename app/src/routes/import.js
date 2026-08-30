@@ -3,48 +3,7 @@ const router = express.Router();
 const prisma = require('../prisma');
 const { asyncHandler } = require('../middleware/errorHandler');
 
-function parseCsvText(text) {
-  const lines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n').filter(l => l.trim());
-  if (lines.length < 2) return [];
-
-  const separator = lines[0].includes(';') ? ';' : ',';
-  const headers = parseCsvLine(lines[0], separator);
-  const rows = [];
-  for (let i = 1; i < lines.length; i++) {
-    const values = parseCsvLine(lines[i], separator);
-    const row = {};
-    headers.forEach((h, idx) => {
-      row[h.trim().toLowerCase()] = (values[idx] || '').trim();
-    });
-    rows.push(row);
-  }
-  return rows;
-}
-
-function parseCsvLine(line, sep) {
-  const result = [];
-  let current = '';
-  let inQuotes = false;
-  for (let i = 0; i < line.length; i++) {
-    const ch = line[i];
-    if (inQuotes) {
-      if (ch === '"' && line[i + 1] === '"') { current += '"'; i++; }
-      else if (ch === '"') { inQuotes = false; }
-      else { current += ch; }
-    } else {
-      if (ch === '"') { inQuotes = true; }
-      else if (ch === sep) { result.push(current); current = ''; }
-      else { current += ch; }
-    }
-  }
-  result.push(current);
-  return result;
-}
-
-function parseNum(val) {
-  if (!val) return 0;
-  return parseFloat(String(val).replace(',', '.')) || 0;
-}
+const { parseCsvText, parseNum } = require('../services/csvService');
 
 // POST /api/import/materials
 router.post('/materials', asyncHandler(async (req, res) => {
